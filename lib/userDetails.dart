@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:progress_dialog/progress_dialog.dart';
 
 class MyDialog extends StatefulWidget {
   @override
@@ -19,23 +19,29 @@ class _MyDialogState extends State<MyDialog> {
   String _number;
   String _address;
   String id;
+  ProgressDialog progressDialog;
 
   File _imageFile;
 
   List data;
+
 
   void addData() async{
     CollectionReference collectionReference = FirebaseFirestore.instance.collection('User');
     Reference imref= FirebaseStorage.instance.ref().child("Images");
     UploadTask uploadTask = imref.putFile(_imageFile);
     TaskSnapshot taskSnapshot = await uploadTask;
+    print("here");
     String url= await taskSnapshot.ref.getDownloadURL();
+    print("here1");
     DocumentReference ref= await collectionReference.add({
       "name": _name,
       "number": _number,
       "address": _address,
       "image": url,
     });
+    print("here2");
+    _imageFile=null;
     setState(() {
       id= ref.id;
     });
@@ -50,7 +56,7 @@ class _MyDialogState extends State<MyDialog> {
         aspectRatio: CropAspectRatio(
           ratioX: 1, ratioY:1
         ),
-        compressQuality: 80,
+        compressQuality: 10,
         compressFormat: ImageCompressFormat.jpg,
         androidUiSettings: AndroidUiSettings(
           toolbarColor: Colors.blue,
@@ -66,6 +72,7 @@ class _MyDialogState extends State<MyDialog> {
 
   @override
   Widget build(BuildContext context) {
+    progressDialog = ProgressDialog(context);
     return AlertDialog(
         content: Stack(
             overflow: Overflow.visible,
@@ -143,9 +150,20 @@ class _MyDialogState extends State<MyDialog> {
                           child: Text("Submit"),
                           onPressed: () {
                             if (_formKey.currentState.validate()) {
-                              _formKey.currentState.save();
-                              addData();
-                              Navigator.pop(context);
+                              if(_imageFile!=null){
+                                _formKey.currentState.save();
+                                addData();
+                                Navigator.pop(context);
+                              }
+                              else
+                                 showDialog(
+                                  context: context,
+                                   builder: (BuildContext context){
+                                      return AlertDialog(
+                                       content: Text("Please capture/select picture to upload!",style: TextStyle(color: Colors.red),),
+                                     );
+                                   }
+                                 );
                             }
                           },
                         ),

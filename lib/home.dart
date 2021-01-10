@@ -153,7 +153,7 @@ class _homeState extends State<home> {
                     return buildItem(values[index]);
                   });
             } else
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
           }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
